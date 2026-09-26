@@ -25,6 +25,7 @@ const transformId = (doc, ret) => {
 
 const teamSchema = new mongoose.Schema({
   name: { type: String, unique: true, required: true },
+  university: { type: String },
   has_checked_in: { type: Boolean, default: false },
   photo_number: { type: String }
 }, { toJSON: { transform: transformId } });

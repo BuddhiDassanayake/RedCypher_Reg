@@ -88,7 +88,10 @@ export default function Onboard() {
                         : 'border-transparent hover:bg-secondary/20 hover:border-border text-foreground cursor-pointer'
                   }`}
                 >
-                  <span>{team.name}</span>
+                  <div className="flex flex-col">
+                    <span>{team.name}</span>
+                    {team.university && <span className="text-xs opacity-75">{team.university}</span>}
+                  </div>
                   {team.has_checked_in && (
                     <span className="text-xs font-semibold bg-secondary/50 text-muted-foreground px-2 py-1 rounded-full">
                       Checked In
