@@ -141,7 +141,7 @@ export default function Admin() {
       <div className="grid grid-cols-2 gap-6 mb-8">
         <Card className="border-border shadow-xl shadow-primary/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-muted text-xs font-semibold uppercase tracking-wider">Teams Arrived</CardTitle>
+            <CardTitle className="text-muted text-xs font-semibold uppercase tracking-wider">Total Teams</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-5xl font-bold text-foreground">{totalTeams}</div>
@@ -173,57 +173,41 @@ export default function Admin() {
                 <thead>
                   <tr className="border-b-2 border-border text-muted text-sm">
                     <th className="pb-3 px-4 font-semibold">Team Name</th>
-                    <th className="pb-3 px-4 font-semibold text-center">Members Present</th>
-
+                    <th className="pb-3 px-4 font-semibold">Member Name</th>
+                    <th className="pb-3 px-4 font-semibold">Certificate Name</th>
+                    <th className="pb-3 px-4 font-semibold">Email</th>
                     <th className="pb-3 px-4 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
                   {teamStats.map((team, i) => (
                     <React.Fragment key={i}>
-                      <tr className="border-b border-border/50 bg-secondary/5 hover:bg-secondary/10 transition-colors">
-                        <td className="py-4 px-4 font-bold text-foreground text-xl">{team.name}</td>
-                        <td className="py-4 px-4 text-center font-medium">
-                          <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                            {team.members.length} Members Present
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          {team.id ? (
-                             <Button variant="outline" size="sm" onClick={() => handleEditTeam(team.id)}>Edit Team</Button>
-                          ) : (
-                             <span className="text-muted text-xs">N/A</span>
+                      {team.members.map((m, j) => (
+                        <tr key={`${i}-${j}`} className="border-b border-border/50 hover:bg-secondary/10 transition-colors">
+                          {j === 0 && (
+                            <td className="py-3 px-4 font-bold text-foreground align-middle border-r border-border/10" rowSpan={team.members.length}>
+                              {team.name}
+                            </td>
                           )}
-                        </td>
-                      </tr>
-                      {team.members.length > 0 && (
-                        <tr>
-                          <td colSpan="3" className="px-6 py-6 bg-background border-b-4 border-border/60">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {team.members.map((m, j) => (
-                                <div key={j} className="p-4 rounded-xl border border-border/80 bg-card shadow-sm hover:shadow-md transition-shadow space-y-2">
-                                  <div className="font-bold text-foreground text-lg border-b border-border pb-2">{m.name}</div>
-                                  <div className="text-sm flex flex-col space-y-1 pt-1">
-                                    <div className="flex flex-col">
-                                      <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Cert Name</span> 
-                                      <span className="text-foreground font-medium">{m.certificate_name}</span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Email</span> 
-                                      <span className="text-foreground font-medium truncate" title={m.member_email}>{m.member_email}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </td>
+                          <td className="py-3 px-4 font-medium">{m.name}</td>
+                          <td className="py-3 px-4">{m.certificate_name}</td>
+                          <td className="py-3 px-4 text-muted-foreground">{m.member_email}</td>
+                          {j === 0 && (
+                            <td className="py-3 px-4 text-center align-middle border-l border-border/10" rowSpan={team.members.length}>
+                              {team.id ? (
+                                <Button variant="outline" size="sm" onClick={() => handleEditTeam(team.id)}>Edit Team</Button>
+                              ) : (
+                                <span className="text-muted text-xs">N/A</span>
+                              )}
+                            </td>
+                          )}
                         </tr>
-                      )}
+                      ))}
                     </React.Fragment>
                   ))}
                   {teamStats.length === 0 && (
                     <tr>
-                      <td colSpan="3" className="text-center py-12 text-muted text-lg">No teams have checked in yet!</td>
+                      <td colSpan="5" className="text-center py-12 text-muted text-lg">No teams have checked in yet!</td>
                     </tr>
                   )}
                 </tbody>
