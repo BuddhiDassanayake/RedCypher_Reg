@@ -94,7 +94,7 @@ export default function Onboard() {
                   </div>
                   {team.has_checked_in && (
                     <span className="text-xs font-semibold bg-secondary/50 text-muted-foreground px-2 py-1 rounded-full">
-                      Checked In
+                      Submitted
                     </span>
                   )}
                 </div>
