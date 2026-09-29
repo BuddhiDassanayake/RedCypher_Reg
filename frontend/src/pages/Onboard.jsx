@@ -32,7 +32,7 @@ export default function Onboard() {
 
   const handleContinue = () => {
     if (selectedTeam) {
-      navigate(`/attendance/${selectedTeam.id}`, { state: { teamName: selectedTeam.name } });
+      navigate(`/certificate/${selectedTeam.id}`, { state: { teamName: selectedTeam.name } });
     }
   };
 
@@ -76,16 +76,13 @@ export default function Onboard() {
                 <div
                   key={team.id}
                   onClick={() => {
-                    if (team.has_checked_in) return;
                     setSelectedTeam(team);
                     setSearchTerm(team.name);
                   }}
                   className={`p-3 rounded-md transition-all border flex justify-between items-center ${
-                    team.has_checked_in
-                      ? 'opacity-50 cursor-not-allowed bg-secondary/5 border-transparent text-muted'
-                      : selectedTeam?.id === team.id
-                        ? 'bg-primary/10 border-primary text-primary font-medium cursor-pointer'
-                        : 'border-transparent hover:bg-secondary/20 hover:border-border text-foreground cursor-pointer'
+                    selectedTeam?.id === team.id
+                      ? 'bg-primary/10 border-primary text-primary font-medium cursor-pointer'
+                      : 'border-transparent hover:bg-secondary/20 hover:border-border text-foreground cursor-pointer'
                   }`}
                 >
                   <div className="flex flex-col">

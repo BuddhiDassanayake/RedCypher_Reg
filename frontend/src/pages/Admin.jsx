@@ -71,7 +71,7 @@ export default function Admin() {
   const addMember = () => {
     setEditingTeam({
       ...editingTeam,
-      members: [...editingTeam.members, { name: '', food_choice: 'None' }]
+      members: [...editingTeam.members, { name: '', certificate_name: '', member_email: '' }]
     });
   };
 
@@ -82,7 +82,7 @@ export default function Admin() {
   };
 
   const handleResetDatabase = async () => {
-    if (window.confirm("Are you sure you want to reset all attendance and food selections? Team names will not be deleted.")) {
+    if (window.confirm("Are you sure you want to reset all attendance and certificate details? Team names will not be deleted.")) {
       try {
         setLoading(true);
         await axios.post('/api/admin/reset');
@@ -103,24 +103,19 @@ export default function Admin() {
       teamStatsMap[teamName] = { 
         id: teamId,
         name: teamName, 
-        membersPresent: 0, 
-        veg: 0, 
-        chicken: 0, 
-        none: 0,
-        photoNumber: r.member_id?.team_id?.photo_number || 'N/A'
+        members: []
       };
     }
-    teamStatsMap[teamName].membersPresent += 1;
-    if (r.food_choice === 'Veg') teamStatsMap[teamName].veg += 1;
-    if (r.food_choice === 'Chicken') teamStatsMap[teamName].chicken += 1;
-    if (r.food_choice === 'None') teamStatsMap[teamName].none += 1;
+    teamStatsMap[teamName].members.push({
+      id: r.member_id?._id,
+      name: r.member_id?.name,
+      certificate_name: r.certificate_name,
+      member_email: r.member_email,
+    });
   });
   
   const teamStats = Object.values(teamStatsMap);
   const totalTeams = teamStats.length;
-  const totalVeg = records.filter(r => r.food_choice === 'Veg').length;
-  const totalChicken = records.filter(r => r.food_choice === 'Chicken').length;
-  const totalNone = records.filter(r => r.food_choice === 'None').length;
 
   return (
     <motion.div
@@ -131,7 +126,7 @@ export default function Admin() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-foreground">Admin Dashboard</h1>
-          <p className="text-muted mt-1">Real-time attendance and food selection metrics by team</p>
+          <p className="text-muted mt-1">Real-time attendance and certificate details by team</p>
         </div>
         <div className="flex gap-3">
           <Button variant="destructive" onClick={handleResetDatabase}>
@@ -143,7 +138,7 @@ export default function Admin() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-2 gap-6 mb-8">
         <Card className="border-border shadow-xl shadow-primary/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-muted text-xs font-semibold uppercase tracking-wider">Teams Arrived</CardTitle>
@@ -160,33 +155,7 @@ export default function Admin() {
             <div className="text-5xl font-bold text-foreground">{records.length}</div>
           </CardContent>
         </Card>
-        <Card className="border-border shadow-xl shadow-primary/5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">🥗</div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-muted text-xs font-semibold uppercase tracking-wider">Veg Meals</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-bold text-emerald-500">{totalVeg}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-border shadow-xl shadow-primary/5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">🍗</div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-muted text-xs font-semibold uppercase tracking-wider">Chicken Meals</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-bold text-amber-500">{totalChicken}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-border shadow-xl shadow-primary/5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">🚫</div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-muted text-xs font-semibold uppercase tracking-wider">No Food</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-bold text-slate-500">{totalNone}</div>
-          </CardContent>
-        </Card>
+
       </div>
 
       <Card className="border-border shadow-xl shadow-primary/5">
@@ -205,58 +174,56 @@ export default function Admin() {
                   <tr className="border-b-2 border-border text-muted text-sm">
                     <th className="pb-3 px-4 font-semibold">Team Name</th>
                     <th className="pb-3 px-4 font-semibold text-center">Members Present</th>
-                    <th className="pb-3 px-4 font-semibold text-center">Veg Required</th>
-                    <th className="pb-3 px-4 font-semibold text-center">Chicken Required</th>
-                    <th className="pb-3 px-4 font-semibold text-center">No Food</th>
-                    <th className="pb-3 px-4 font-semibold text-center">Photo No.</th>
+
                     <th className="pb-3 px-4 font-semibold text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
                   {teamStats.map((team, i) => (
-                    <tr key={i} className="border-b border-border/50 hover:bg-secondary/20 transition-colors">
-                      <td className="py-4 px-4 font-medium text-foreground text-lg">{team.name}</td>
-                      <td className="py-4 px-4 text-center">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold">
-                          {team.membersPresent}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${
-                          team.veg > 0 ? 'bg-emerald-500/15 text-emerald-500' : 'text-muted/50'
-                        }`}>
-                          {team.veg}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${
-                          team.chicken > 0 ? 'bg-amber-500/15 text-amber-500' : 'text-muted/50'
-                        }`}>
-                          {team.chicken}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${
-                          team.none > 0 ? 'bg-slate-500/15 text-slate-400' : 'text-muted/50'
-                        }`}>
-                          {team.none}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-center font-mono font-bold text-lg text-primary tracking-wider">
-                        {team.photoNumber}
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        {team.id ? (
-                           <Button variant="outline" size="sm" onClick={() => handleEditTeam(team.id)}>Edit</Button>
-                        ) : (
-                           <span className="text-muted text-xs">N/A</span>
-                        )}
-                      </td>
-                    </tr>
+                    <React.Fragment key={i}>
+                      <tr className="border-b border-border/50 bg-secondary/5 hover:bg-secondary/10 transition-colors">
+                        <td className="py-4 px-4 font-bold text-foreground text-xl">{team.name}</td>
+                        <td className="py-4 px-4 text-center font-medium">
+                          <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                            {team.members.length} Members Present
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-center">
+                          {team.id ? (
+                             <Button variant="outline" size="sm" onClick={() => handleEditTeam(team.id)}>Edit Team</Button>
+                          ) : (
+                             <span className="text-muted text-xs">N/A</span>
+                          )}
+                        </td>
+                      </tr>
+                      {team.members.length > 0 && (
+                        <tr>
+                          <td colSpan="3" className="px-6 py-6 bg-background border-b-4 border-border/60">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {team.members.map((m, j) => (
+                                <div key={j} className="p-4 rounded-xl border border-border/80 bg-card shadow-sm hover:shadow-md transition-shadow space-y-2">
+                                  <div className="font-bold text-foreground text-lg border-b border-border pb-2">{m.name}</div>
+                                  <div className="text-sm flex flex-col space-y-1 pt-1">
+                                    <div className="flex flex-col">
+                                      <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Cert Name</span> 
+                                      <span className="text-foreground font-medium">{m.certificate_name}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Email</span> 
+                                      <span className="text-foreground font-medium truncate" title={m.member_email}>{m.member_email}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                   {teamStats.length === 0 && (
                     <tr>
-                      <td colSpan="7" className="text-center py-12 text-muted text-lg">No teams have checked in yet!</td>
+                      <td colSpan="3" className="text-center py-12 text-muted text-lg">No teams have checked in yet!</td>
                     </tr>
                   )}
                 </tbody>
@@ -310,15 +277,20 @@ export default function Admin() {
                           placeholder="Member Name"
                           className="flex-1 p-2 rounded-md border border-input bg-background text-foreground"
                         />
-                        <select 
-                          value={member.food_choice}
-                          onChange={(e) => handleMemberChange(i, 'food_choice', e.target.value)}
-                          className="p-2 rounded-md border border-input bg-background text-foreground"
-                        >
-                          <option value="Veg">Veg</option>
-                          <option value="Chicken">Chicken</option>
-                          <option value="None">None</option>
-                        </select>
+                        <input 
+                          type="text" 
+                          value={member.certificate_name}
+                          onChange={(e) => handleMemberChange(i, 'certificate_name', e.target.value)}
+                          placeholder="Certificate Name"
+                          className="flex-1 p-2 rounded-md border border-input bg-background text-foreground"
+                        />
+                        <input 
+                          type="email" 
+                          value={member.member_email}
+                          onChange={(e) => handleMemberChange(i, 'member_email', e.target.value)}
+                          placeholder="Email"
+                          className="flex-1 p-2 rounded-md border border-input bg-background text-foreground"
+                        />
                         <Button variant="destructive" size="sm" onClick={() => removeMember(i)}>Remove</Button>
                       </div>
                     ))}

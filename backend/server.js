@@ -26,8 +26,7 @@ const transformId = (doc, ret) => {
 const teamSchema = new mongoose.Schema({
   name: { type: String, unique: true, required: true },
   university: { type: String },
-  has_checked_in: { type: Boolean, default: false },
-  photo_number: { type: String }
+  has_checked_in: { type: Boolean, default: false }
 }, { toJSON: { transform: transformId } });
 
 const memberSchema = new mongoose.Schema({
@@ -37,7 +36,8 @@ const memberSchema = new mongoose.Schema({
 
 const attendanceSchema = new mongoose.Schema({
   member_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Member', required: true },
-  food_choice: { type: String, required: true },
+  certificate_name: { type: String, required: true },
+  member_email: { type: String, required: true },
   date: { type: String, required: true }
 }, { toJSON: { transform: transformId } });
 
@@ -80,7 +80,18 @@ app.get('/api/teams', async (req, res) => {
 app.get('/api/teams/:id/members', async (req, res) => {
   try {
     const members = await Member.find({ team_id: req.params.id });
-    res.json(members);
+    const attendance = await Attendance.find({ member_id: { $in: members.map(m => m._id) } });
+    
+    const membersData = members.map(m => {
+      const att = attendance.find(a => a.member_id.toString() === m._id.toString());
+      return {
+        id: m.id,
+        name: m.name,
+        certificate_name: att ? att.certificate_name : '',
+        member_email: att ? att.member_email : ''
+      };
+    });
+    res.json(membersData);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -94,24 +105,32 @@ app.post('/api/attendance', async (req, res) => {
     }
     
     const today = new Date().toISOString().split('T')[0];
-    const attendanceRecords = selections.map(sel => ({
-      member_id: sel.memberId,
-      food_choice: sel.foodChoice,
-      date: today
-    }));
+    for (const sel of selections) {
+      let mId = sel.memberId;
+      if (mId && mId.toString().startsWith('new_')) {
+        const newMember = await Member.create({ team_id: teamId, name: sel.certificateName || 'New Member' });
+        mId = newMember._id;
+      }
+      
+      await Attendance.findOneAndUpdate(
+        { member_id: mId },
+        {
+          member_id: mId,
+          certificate_name: sel.certificateName,
+          member_email: sel.memberEmail,
+          date: today
+        },
+        { upsert: true, new: true }
+      );
+    }
     
-    await Attendance.insertMany(attendanceRecords);
-    
-    let photoNumber = null;
     if (teamId) {
-      photoNumber = Math.floor(1000 + Math.random() * 9000).toString();
       await Team.findByIdAndUpdate(teamId, { 
-        has_checked_in: true,
-        photo_number: photoNumber 
+        has_checked_in: true
       });
     }
     
-    res.json({ success: true, photoNumber });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -140,7 +159,8 @@ app.get('/api/admin/team/:id', async (req, res) => {
       return {
         id: m.id,
         name: m.name,
-        food_choice: att ? att.food_choice : 'None'
+        certificate_name: att ? att.certificate_name : '',
+        member_email: att ? att.member_email : ''
       };
     });
     
@@ -177,13 +197,13 @@ app.put('/api/admin/team/:id', async (req, res) => {
           await Member.findByIdAndUpdate(m.id, { name: m.name });
           const existingAtt = await Attendance.findOne({ member_id: m.id });
           if (existingAtt) {
-             await Attendance.findByIdAndUpdate(existingAtt._id, { food_choice: m.food_choice });
+             await Attendance.findByIdAndUpdate(existingAtt._id, { certificate_name: m.certificate_name, member_email: m.member_email });
           } else {
-             await Attendance.create({ member_id: m.id, food_choice: m.food_choice, date: today });
+             await Attendance.create({ member_id: m.id, certificate_name: m.certificate_name, member_email: m.member_email, date: today });
           }
         } else {
           const newMember = await Member.create({ team_id: req.params.id, name: m.name });
-          await Attendance.create({ member_id: newMember._id, food_choice: m.food_choice, date: today });
+          await Attendance.create({ member_id: newMember._id, certificate_name: m.certificate_name, member_email: m.member_email, date: today });
         }
       }
     }
@@ -197,7 +217,7 @@ app.put('/api/admin/team/:id', async (req, res) => {
 app.post('/api/admin/reset', async (req, res) => {
   try {
     await Attendance.deleteMany({});
-    await Team.updateMany({}, { has_checked_in: false, photo_number: null });
+    await Team.updateMany({}, { has_checked_in: false });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

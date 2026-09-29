@@ -3,9 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AnimatePresence } from 'framer-motion';
 
 import Onboard from './pages/Onboard';
-import Attendance from './pages/Attendance';
-import FoodSelection from './pages/FoodSelection';
-import Photo from './pages/Photo';
+import CertificateDetails from './pages/CertificateDetails';
 import Finish from './pages/Finish';
 import Admin from './pages/Admin';
 
@@ -16,9 +14,7 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Onboard />} />
-        <Route path="/attendance/:teamId" element={<Attendance />} />
-        <Route path="/food/:teamId" element={<FoodSelection />} />
-        <Route path="/photo" element={<Photo />} />
+        <Route path="/certificate/:teamId" element={<CertificateDetails />} />
         <Route path="/finish" element={<Finish />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
