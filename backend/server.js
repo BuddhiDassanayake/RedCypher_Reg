@@ -198,10 +198,14 @@ app.get('/api/admin/team/:id', async (req, res) => {
 app.put('/api/admin/team/:id', async (req, res) => {
   try {
     await connectToDatabase();
-    const { name, members } = req.body;
+    const { name, university, members } = req.body;
     
-    if (name) {
-      await Team.findByIdAndUpdate(req.params.id, { name });
+    const teamUpdate = {};
+    if (name !== undefined) teamUpdate.name = name;
+    if (university !== undefined) teamUpdate.university = university;
+    
+    if (Object.keys(teamUpdate).length > 0) {
+      await Team.findByIdAndUpdate(req.params.id, teamUpdate);
     }
     
     const today = new Date().toISOString().split('T')[0];
@@ -220,7 +224,7 @@ app.put('/api/admin/team/:id', async (req, res) => {
       // Update or create members
       for (const m of members) {
         if (m.id) {
-          await Member.findByIdAndUpdate(m.id, { name: m.name });
+          await Member.findByIdAndUpdate(m.id, { name: m.name, university_id: m.university_id });
           const existingAtt = await Attendance.findOne({ member_id: m.id });
           if (existingAtt) {
              await Attendance.findByIdAndUpdate(existingAtt._id, { certificate_name: m.certificate_name, member_email: m.member_email });
@@ -228,7 +232,7 @@ app.put('/api/admin/team/:id', async (req, res) => {
              await Attendance.create({ member_id: m.id, certificate_name: m.certificate_name, member_email: m.member_email, date: today });
           }
         } else {
-          const newMember = await Member.create({ team_id: req.params.id, name: m.name });
+          const newMember = await Member.create({ team_id: req.params.id, name: m.name, university_id: m.university_id });
           await Attendance.create({ member_id: newMember._id, certificate_name: m.certificate_name, member_email: m.member_email, date: today });
         }
       }

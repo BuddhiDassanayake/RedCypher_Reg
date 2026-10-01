@@ -71,7 +71,7 @@ export default function Admin() {
   const addMember = () => {
     setEditingTeam({
       ...editingTeam,
-      members: [...editingTeam.members, { name: '', certificate_name: '', member_email: '' }]
+      members: [...editingTeam.members, { name: '', university_id: '', certificate_name: '', member_email: '' }]
     });
   };
 
@@ -99,16 +99,19 @@ export default function Admin() {
   records.forEach(r => {
     const teamName = r.member_id?.team_id?.name || 'Unknown Team';
     const teamId = r.member_id?.team_id?.id || null;
+    const teamUniversity = r.member_id?.team_id?.university || 'N/A';
     if (!teamStatsMap[teamName]) {
       teamStatsMap[teamName] = { 
         id: teamId,
         name: teamName, 
+        university: teamUniversity,
         members: []
       };
     }
     teamStatsMap[teamName].members.push({
       id: r.member_id?._id,
       name: r.member_id?.name,
+      university_id: r.member_id?.university_id || '',
       certificate_name: r.certificate_name,
       member_email: r.member_email,
     });
@@ -173,7 +176,9 @@ export default function Admin() {
                 <thead>
                   <tr className="border-b-2 border-border text-muted text-sm">
                     <th className="pb-3 px-4 font-semibold">Team Name</th>
+                    <th className="pb-3 px-4 font-semibold">University</th>
                     <th className="pb-3 px-4 font-semibold">Member Name</th>
+                    <th className="pb-3 px-4 font-semibold">University ID</th>
                     <th className="pb-3 px-4 font-semibold">Certificate Name</th>
                     <th className="pb-3 px-4 font-semibold">Email</th>
                     <th className="pb-3 px-4 font-semibold text-center">Actions</th>
@@ -189,7 +194,13 @@ export default function Admin() {
                               {team.name}
                             </td>
                           )}
+                          {j === 0 && (
+                            <td className="py-3 px-4 font-medium text-muted-foreground align-middle border-r border-border/10" rowSpan={team.members.length}>
+                              {team.university}
+                            </td>
+                          )}
                           <td className="py-3 px-4 font-medium">{m.name}</td>
+                          <td className="py-3 px-4 text-muted-foreground">{m.university_id || 'N/A'}</td>
                           <td className="py-3 px-4">{m.certificate_name}</td>
                           <td className="py-3 px-4 text-muted-foreground">{m.member_email}</td>
                           {j === 0 && (
@@ -246,6 +257,15 @@ export default function Admin() {
                       className="w-full p-2 rounded-md border border-input bg-background text-foreground"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-muted">University</label>
+                    <input 
+                      type="text" 
+                      value={editingTeam.team.university || ''} 
+                      onChange={(e) => setEditingTeam({ ...editingTeam, team: { ...editingTeam.team, university: e.target.value } })}
+                      className="w-full p-2 rounded-md border border-input bg-background text-foreground"
+                    />
+                  </div>
 
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
@@ -259,21 +279,28 @@ export default function Admin() {
                           value={member.name}
                           onChange={(e) => handleMemberChange(i, 'name', e.target.value)}
                           placeholder="Member Name"
-                          className="flex-1 p-2 rounded-md border border-input bg-background text-foreground"
+                          className="flex-1 p-2 rounded-md border border-input bg-background text-foreground min-w-0"
+                        />
+                        <input 
+                          type="text" 
+                          value={member.university_id || ''}
+                          onChange={(e) => handleMemberChange(i, 'university_id', e.target.value)}
+                          placeholder="University ID"
+                          className="flex-1 p-2 rounded-md border border-input bg-background text-foreground min-w-0"
                         />
                         <input 
                           type="text" 
                           value={member.certificate_name}
                           onChange={(e) => handleMemberChange(i, 'certificate_name', e.target.value)}
                           placeholder="Certificate Name"
-                          className="flex-1 p-2 rounded-md border border-input bg-background text-foreground"
+                          className="flex-1 p-2 rounded-md border border-input bg-background text-foreground min-w-0"
                         />
                         <input 
                           type="email" 
                           value={member.member_email}
                           onChange={(e) => handleMemberChange(i, 'member_email', e.target.value)}
                           placeholder="Email"
-                          className="flex-1 p-2 rounded-md border border-input bg-background text-foreground"
+                          className="flex-1 p-2 rounded-md border border-input bg-background text-foreground min-w-0"
                         />
                         <Button variant="destructive" size="sm" onClick={() => removeMember(i)}>Remove</Button>
                       </div>
