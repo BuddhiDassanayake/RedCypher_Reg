@@ -31,7 +31,8 @@ const teamSchema = new mongoose.Schema({
 
 const memberSchema = new mongoose.Schema({
   team_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', required: true },
-  name: { type: String, required: true }
+  name: { type: String, required: true },
+  university_id: { type: String }
 }, { toJSON: { transform: transformId } });
 
 const attendanceSchema = new mongoose.Schema({
