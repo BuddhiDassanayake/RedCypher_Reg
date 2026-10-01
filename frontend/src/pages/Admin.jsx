@@ -3,11 +3,13 @@ import axios from 'axios';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { motion } from 'framer-motion';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
 
   const [records, setRecords] = useState([]);
@@ -127,13 +129,20 @@ export default function Admin() {
   const teamStats = Object.values(teamStatsMap);
   const totalTeams = teamStats.length;
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'redcypher2026') {
-      setIsAuthenticated(true);
-      setLoginError('');
-    } else {
-      setLoginError('Invalid username or password');
+    setLoginError('');
+    try {
+      const res = await axios.post('/api/admin/login', { username, password });
+      if (res.data.success) {
+        setIsAuthenticated(true);
+      }
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        setLoginError('Invalid username or password');
+      } else {
+        setLoginError('An error occurred during login');
+      }
     }
   };
 
@@ -163,13 +172,22 @@ export default function Admin() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Password</label>
-                <input 
-                  type="password" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-2 rounded-md border border-input bg-background text-foreground"
-                  required 
-                />
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full p-2 pr-10 rounded-md border border-input bg-background text-foreground"
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
               <Button type="submit" className="w-full h-11 mt-4">Login</Button>
             </form>

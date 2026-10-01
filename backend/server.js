@@ -61,9 +61,15 @@ const attendanceSchema = new mongoose.Schema({
   date: { type: String, required: true }
 }, { toJSON: { transform: transformId } });
 
+const adminUserSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true }
+}, { toJSON: { transform: transformId } });
+
 const Team = mongoose.model('Team', teamSchema);
 const Member = mongoose.model('Member', memberSchema);
 const Attendance = mongoose.model('Attendance', attendanceSchema);
+const AdminUser = mongoose.model('AdminUser', adminUserSchema);
 
 // Seeding function
 async function seedDatabase() {
@@ -80,6 +86,13 @@ async function seedDatabase() {
         await Member.create({ team_id: team._id, name: `Charlie ${tName}` });
       }
       console.log('Seeding complete.');
+    }
+    
+    // Ensure admin user exists
+    const adminCount = await AdminUser.countDocuments();
+    if (adminCount === 0) {
+      console.log('Creating default admin user...');
+      await AdminUser.create({ username: 'admin', password: 'redcypher2026' });
     }
   } catch (error) {
     console.error('Seeding error:', error);
@@ -154,6 +167,22 @@ app.post('/api/attendance', async (req, res) => {
     }
     
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    await connectToDatabase();
+    const { username, password } = req.body;
+    
+    const admin = await AdminUser.findOne({ username, password });
+    if (admin) {
+      res.json({ success: true });
+    } else {
+      res.status(401).json({ error: 'Invalid username or password' });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
