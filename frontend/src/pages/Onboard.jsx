@@ -51,7 +51,7 @@ export default function Onboard() {
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">Find Your Team</CardTitle>
           <CardDescription className="text-muted">
-            Search and select your team to begin the registration process
+            Search and select your team to provide your certificate information
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

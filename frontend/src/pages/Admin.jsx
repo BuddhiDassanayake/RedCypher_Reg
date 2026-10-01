@@ -82,7 +82,7 @@ export default function Admin() {
   };
 
   const handleResetDatabase = async () => {
-    if (window.confirm("Are you sure you want to reset all attendance and certificate details? Team names will not be deleted.")) {
+    if (window.confirm("Are you sure you want to reset all certificate details? Team names will not be deleted.")) {
       try {
         setLoading(true);
         await axios.post('/api/admin/reset');
@@ -129,14 +129,14 @@ export default function Admin() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-foreground">Admin Dashboard</h1>
-          <p className="text-muted mt-1">Real-time attendance and certificate details by team</p>
+          <p className="text-muted mt-1">Real-time certificate details collection by team</p>
         </div>
         <div className="flex gap-3">
           <Button variant="destructive" onClick={handleResetDatabase}>
             Reset Database
           </Button>
           <Button variant="outline" onClick={() => window.location.href = '/'}>
-            Return to Check-in
+            Return to Certificate Form
           </Button>
         </div>
       </div>
@@ -163,7 +163,7 @@ export default function Admin() {
 
       <Card className="border-border shadow-xl shadow-primary/5">
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-foreground">Team Attendance Log</CardTitle>
+          <CardTitle className="text-xl font-bold text-foreground">Certificate Submission Log</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -218,7 +218,7 @@ export default function Admin() {
                   ))}
                   {teamStats.length === 0 && (
                     <tr>
-                      <td colSpan="5" className="text-center py-12 text-muted text-lg">No teams have checked in yet!</td>
+                      <td colSpan="7" className="text-center py-12 text-muted text-lg">No teams have submitted yet!</td>
                     </tr>
                   )}
                 </tbody>

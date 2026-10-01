@@ -35,7 +35,7 @@ export default function Finish() {
           </motion.div>
           <CardTitle className="text-3xl font-extrabold text-foreground mb-2">Thank You!</CardTitle>
           <CardDescription className="text-muted text-base">
-            Your team's attendance and certificate details have been recorded.
+            Your team's certificate details have been securely recorded.
           </CardDescription>
           
           <div className="mt-8 text-sm text-muted/70 flex items-center justify-center space-x-2">
