@@ -8,15 +8,34 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/competition';
-mongoose.connect(MONGO_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    seedDatabase();
-  })
-  .catch(err => console.error('Error connecting to MongoDB:', err));
+let isConnected = false;
 
-// Schemas & Models
+const connectToDatabase = async () => {
+  if (isConnected) {
+    return;
+  }
+
+  const MONGO_URI = process.env.MONGO_URI;
+  if (!MONGO_URI) {
+    console.warn("⚠️ MONGO_URI is missing. Make sure it's set in Vercel Environment Variables!");
+    // Fallback for local development
+    await mongoose.connect('mongodb://localhost:27017/competition');
+    isConnected = true;
+    return;
+  }
+
+  try {
+    const db = await mongoose.connect(MONGO_URI);
+    isConnected = db.connections[0].readyState === 1;
+    console.log('Connected to MongoDB');
+    
+    // Run seed if needed
+    seedDatabase();
+  } catch (err) {
+    console.error('Error connecting to MongoDB:', err);
+    throw err;
+  }
+};// Schemas & Models
 const transformId = (doc, ret) => {
   ret.id = ret._id.toString();
   delete ret._id;
@@ -70,6 +89,7 @@ async function seedDatabase() {
 // Routes
 app.get('/api/teams', async (req, res) => {
   try {
+    await connectToDatabase();
     const query = req.query.q || '';
     const teams = await Team.find({ name: { $regex: query, $options: 'i' } });
     res.json(teams);
@@ -80,6 +100,7 @@ app.get('/api/teams', async (req, res) => {
 
 app.get('/api/teams/:id/members', async (req, res) => {
   try {
+    await connectToDatabase();
     const members = await Member.find({ team_id: req.params.id });
     const attendance = await Attendance.find({ member_id: { $in: members.map(m => m._id) } });
     
@@ -100,6 +121,7 @@ app.get('/api/teams/:id/members', async (req, res) => {
 
 app.post('/api/attendance', async (req, res) => {
   try {
+    await connectToDatabase();
     const { teamId, selections } = req.body;
     if (!selections || !Array.isArray(selections)) {
       return res.status(400).json({ error: 'Invalid payload' });
@@ -139,6 +161,7 @@ app.post('/api/attendance', async (req, res) => {
 
 app.get('/api/admin/stats', async (req, res) => {
   try {
+    await connectToDatabase();
     const records = await Attendance.find().populate({
       path: 'member_id',
       populate: { path: 'team_id' }
@@ -151,6 +174,7 @@ app.get('/api/admin/stats', async (req, res) => {
 
 app.get('/api/admin/team/:id', async (req, res) => {
   try {
+    await connectToDatabase();
     const team = await Team.findById(req.params.id);
     const members = await Member.find({ team_id: req.params.id });
     const attendance = await Attendance.find({ member_id: { $in: members.map(m => m._id) } });
@@ -173,6 +197,7 @@ app.get('/api/admin/team/:id', async (req, res) => {
 
 app.put('/api/admin/team/:id', async (req, res) => {
   try {
+    await connectToDatabase();
     const { name, members } = req.body;
     
     if (name) {
@@ -217,6 +242,7 @@ app.put('/api/admin/team/:id', async (req, res) => {
 
 app.post('/api/admin/reset', async (req, res) => {
   try {
+    await connectToDatabase();
     await Attendance.deleteMany({});
     await Team.updateMany({}, { has_checked_in: false });
     res.json({ success: true });
