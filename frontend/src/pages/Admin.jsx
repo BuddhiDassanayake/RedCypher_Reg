@@ -5,6 +5,11 @@ import { Button } from '../components/ui/button';
 import { motion } from 'framer-motion';
 
 export default function Admin() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -25,8 +30,10 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    if (isAuthenticated) {
+      fetchStats();
+    }
+  }, [isAuthenticated]);
 
   const handleEditTeam = async (teamId) => {
     setIsEditing(true);
@@ -119,6 +126,58 @@ export default function Admin() {
   
   const teamStats = Object.values(teamStatsMap);
   const totalTeams = teamStats.length;
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (username === 'admin' && password === 'redcypher2026') {
+      setIsAuthenticated(true);
+      setLoginError('');
+    } else {
+      setLoginError('Invalid username or password');
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md px-4 py-12 mx-auto"
+      >
+        <Card className="border-border shadow-xl shadow-primary/5">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center">Admin Login</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              {loginError && <p className="text-destructive text-sm text-center font-medium">{loginError}</p>}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Username</label>
+                <input 
+                  type="text" 
+                  value={username} 
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full p-2 rounded-md border border-input bg-background text-foreground"
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Password</label>
+                <input 
+                  type="password" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-2 rounded-md border border-input bg-background text-foreground"
+                  required 
+                />
+              </div>
+              <Button type="submit" className="w-full h-11 mt-4">Login</Button>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
